@@ -1,6 +1,7 @@
 # module to draw things with tkinter
 
 from tkinter import *
+import sys
 import board_properties as Config
 import consts as Consts
 
@@ -15,9 +16,27 @@ def clickHandler(event, pBoard):
         print('click at x : (%d), y : (%d)' % (event.x, event.y))
 
 
-def keyboardHandler(event):
+def keyboardHandler(event, board):
     if Consts.DEBUG and Consts.DEBUG_FRONT:
-        print('keystroke pressed : ', repr(event.char))
+        print('keystroke pressed : ', event.keycode)
+    if event.keycode in Consts.TK_KEY_EXIT:
+        print('You decided to quit, pussy') # Need an upgrade lol, should have a dict a lambda functions
+        sys.exit()
+    elif event.keycode in Consts.TK_KEY_LEFT:
+        # Left
+        board.moveCurrent(False)
+    elif event.keycode in Consts.TK_KEY_RIGHT:
+        # Right
+        board.moveCurrent(True)
+    elif event.keycode in Consts.TK_KEY_ROT_CW90:
+        # Rotation clockwise 90
+        board.rotateCurrent(True)
+    elif event.keycode in Consts.TK_KEY_ROT_NCW90:
+        # Rotation not clockwise 90
+        board.rotateCurrent(False)
+    elif event.keycode in Consts.TK_KEY_ACCELERATE:
+        # Accelerate
+        board.accelerate()
 
 
 def updateHandler(pInstance, pWindow, pBoard):
@@ -33,9 +52,11 @@ def updateHandler(pInstance, pWindow, pBoard):
 def getWindow(pInstance, pBoard):
     ''' Returns a canvas object to draw on '''
     canvas = Canvas(pInstance, width=Config.WIDTH, height=Config.HEIGHT)
-    canvas.bind('<Key>', keyboardHandler)
+    canvas.bind('<Key>',
+                lambda event, board=pBoard: keyboardHandler(event, board))
     canvas.bind('<ButtonPress-1>',
                 lambda event, board=pBoard: clickHandler(event, board))
+    canvas.focus_set()
     canvas.pack()
     return canvas
 
@@ -61,9 +82,11 @@ def scaleBoardToGraphic(pPoint):
 def drawSquare(window, x, y, color):
     sPoint = scaleBoardToGraphic((x, y))
     ePoint = scaleBoardToGraphic((x + 1, y + 1))
+    """
     if Consts.DEBUG and Consts.DEBUG_FRONT:
         print('SQUARE:: start point : {}, end point : {}'.format(sPoint,
                                                                  ePoint))
+    """
     window.create_rectangle(sPoint[0], sPoint[1],
                             ePoint[0], ePoint[1],
                             fill=color)
@@ -80,10 +103,10 @@ def drawBoard(window, board):
             frame = board.getFrame(x, y)
             if frame in Consts.BOA_GRAPHIC_REPR:
                 drawSquare(window, x, y, Consts.BOA_GRAPHIC_REPR[frame])
-    if Consts.DEBUG and Consts.DEBUG_FRONT: print("_____")
+#    if Consts.DEBUG and Consts.DEBUG_FRONT: print("_____")
     if board.currentPiece and board.currentPiece.repr and board.currentPiece.type:
-        if Consts.DEBUG and Consts.DEBUG_FRONT: print("currentPieceType: ", board.currentPiece.type)
+#        if Consts.DEBUG and Consts.DEBUG_FRONT: print("currentPieceType: ", board.currentPiece.type)
         for point in board.currentPiece.repr:
             if board.currentPiece.type in Consts.BOA_GRAPHIC_REPR:
                 drawSquare(window, point[0], point[1], Consts.BOA_GRAPHIC_REPR[board.currentPiece.type])
-    if Consts.DEBUG and Consts.DEBUG_FRONT: print("_____")
+#    if Consts.DEBUG and Consts.DEBUG_FRONT: print("_____")

@@ -33,7 +33,8 @@ class Board(object):
 
     def dropCurrentPiece(self):
         for point in self.currentPiece.repr:
-            print("type of pieceType: ", type(self.currentPiece.type))
+            print("point : ", point)
+            if Consts.DEBUG and Consts.DEBUG_BACK: print("type of pieceType: ", type(self.currentPiece.type))
             self.field[self.__TransformCoords(point[0], point[1])] = self.currentPiece.type
         self.currentPiece = None
 
@@ -44,12 +45,12 @@ class Board(object):
     def gravity(self):
         if Consts.DEBUG and Consts.DEBUG_BACK:
             print("applying gravity ...")
-        predictedRepr = self.currentPiece.repr[:]
+        predictedRepr = [row[:] for row in self.currentPiece.repr]
         if predictedRepr:
             if Consts.DEBUG and Consts.DEBUG_BACK:
                 print("predictedRepr: ", predictedRepr)
             for i, point in enumerate(predictedRepr):
-                predictedRepr[i] = (point[0], point[1] + 1)
+                predictedRepr[i][1] += 1
             if Consts.DEBUG and Consts.DEBUG_BACK:
                 print("predictedRepr: ", predictedRepr)
             if not self.collision(predictedRepr):
@@ -74,31 +75,89 @@ class Board(object):
 
     def __TriggerImpact(self):
         # function to apply side effects of impact (i.e., delete a row if the row it is filled after the impact)
-        # check lines to delete
         self.dropCurrentPiece()
         self.setCurrentPiece()
+        self.__RemoveFilledLines()
+
+    def __RemoveFilledLines(self):
+        # should optimize this rly (does not work btw)
+        def isLineFill(localY):
+            for x in range(self.width):
+                frame = self.getFrame(x, localY)
+                if frame != None:
+                    if frame == Consts.BOA_EMPTY_REPR:
+                        return False
+            return True
+
+        def dropoutLine(localY):
+            for i in range(localY, self.height):
+                print("i = ", i)
+                if i < self.height - 1:
+                    for x in range(self.width):
+                        self.setFrame(x, localY, self.getFrame(x, localY + 1))
+                else:
+                    for x in range(self.width):
+                        self.setFrame(x, localY, Consts.BOA_EMPTY_REPR)
+
+        for y in range(self.height):
+            if isLineFill(y):
+                print("fill !")
+                dropoutLine(y)
 
     def moveCurrent(self, pDirection):
         # translate current piece
+        predictedRepr = [row[:] for row in self.currentPiece.repr]
         if pDirection:
             # true, move to the right
-            pass
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            for i, point in enumerate(predictedRepr):
+                predictedRepr[i][0] += 1
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
         else:
             # false, move to the left
-            pass
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            for i, point in enumerate(predictedRepr):
+                predictedRepr[i][0] -= 1
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+        if not self.collision(predictedRepr):
+            self.currentPiece.repr = predictedRepr
 
     def rotateCurrent(self, pDirection):
         # rotate current piece
+        predictedRepr = [row[:] for row in self.currentPiece.repr]
         if pDirection:
             # true, rotate 90° clockwise
-            pass
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            for i, point in enumerate(predictedRepr):
+                predictedRepr[i][0] += self.currentPiece.repr[i][1] - Consts.PIECE_PIVOT[self.currentPiece.type][0]
+                predictedRepr[i][1] += Consts.PIECE_PIVOT[self.currentPiece.type][1] - self.currentPiece.repr[i][0]
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
         else:
             # false, rotate -90° clockwise
+            """
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            for i, point in enumerate(predictedRepr):
+                predictedRepr[i][0] = y #self.currentPiece.repr[i][1] - Consts.PIECE_PIVOT[self.currentPiece.type]
+                predictedRepr[i][1] = -x #Consts.PIECE_PIVOT[self.currentPiece.type] - self.currentPiece.repr[i][0]
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            """
             pass
+        if not self.collision(predictedRepr):
+            print("lolololol")
+            self.currentPiece.repr = predictedRepr
 
-    def accelerate(self, pToggle):
+    def accelerate(self):
         # toggle acceleration
-        pass
+        self.accelerate = not self.accelerate
+        # change timer here
 
     def checkLoosance(self):
         # check loose condition, if lost return true
@@ -108,7 +167,7 @@ class Board(object):
         return self.field[self.__TransformCoords(x, y)]
 
     def setFrame(self, x, y, value):
-        self.field[self.__TransformCoods(x, y)] = value
+        self.field[self.__TransformCoords(x, y)] = value
 
     def __TransformCoords(self, x, y):
         return (y * self.width) + x
