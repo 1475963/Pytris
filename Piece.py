@@ -18,7 +18,7 @@ class Piece(object):
     def buildPiece(pos, virtualPiece):
         piece = []
         for point in Consts.BOA_REAL_REPR[virtualPiece]:
-            piece.append((point[0] + pos[0], point[1] + pos[1]))
+            piece.append((int(point[0] + pos[0]), int(point[1] + pos[1])))
         if Consts.DEBUG and Consts.DEBUG_BACK:
             print("piece: ", piece)
         return Piece(piece, virtualPiece)

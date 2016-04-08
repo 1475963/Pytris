@@ -31,24 +31,52 @@ class Board(object):
         self.currentPiece = self.nextPiece
         self.nextPiece = Piece.nextPiece(Consts.BOA_DEFAULT_SPAWN)
 
+    def dropCurrentPiece(self):
+        for point in self.currentPiece.repr:
+            print("type of pieceType: ", type(self.currentPiece.type))
+            self.field[self.__TransformCoords(point[0], point[1])] = self.currentPiece.type
+        self.currentPiece = None
+
     def swapStorage(self):
         if self.storage:
             self.currentPiece = self.storage, self.storage = self.currentPiece #swap variables python's lazy way
 
     def gravity(self):
-#        print("applying gravity ...")
-        """
-        if self.currentPosition[1] > 0 and self.field.getFrame(self.currentPosition[0], self.currentPosition[1] - 1) == BOA_EMPTY_REPR:
-            self.currentPosition[1] -= 1
-        """
-        pass
+        if Consts.DEBUG and Consts.DEBUG_BACK:
+            print("applying gravity ...")
+        predictedRepr = self.currentPiece.repr[:]
+        if predictedRepr:
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            for i, point in enumerate(predictedRepr):
+                predictedRepr[i] = (point[0], point[1] + 1)
+            if Consts.DEBUG and Consts.DEBUG_BACK:
+                print("predictedRepr: ", predictedRepr)
+            if not self.collision(predictedRepr):
+                self.currentPiece.repr = predictedRepr
+            else:
+                self.__TriggerImpact()
 
-    def collision(self):
-        pass
+    def collision(self, pieceRepr):
+        if Consts.DEBUG and Consts.DEBUG_BACK:
+            print("checking collisions ...")
+        # Check loose condition
+        # TO DO
+        # Check collisions
+        if pieceRepr:
+            for point in pieceRepr:
+                if ((point[0] < 0 or point[0] >= Consts.BOA_WIDTH)
+                    or (point[1] < 0 or point[1] >= Consts.BOA_HEIGHT)):
+                    return True
+                if self.field[self.__TransformCoords(point[0], point[1])] != Consts.BOA_EMPTY_REPR:
+                    return True
+        return False
 
     def __TriggerImpact(self):
-        # function to apply side effects of impact (i.e., delete a row if the row is filled after the impact)
-        pass
+        # function to apply side effects of impact (i.e., delete a row if the row it is filled after the impact)
+        # check lines to delete
+        self.dropCurrentPiece()
+        self.setCurrentPiece()
 
     def moveCurrent(self, pDirection):
         # translate current piece
@@ -72,26 +100,15 @@ class Board(object):
         # toggle acceleration
         pass
 
-    def getFrame(self, x, y):
-        return self.field[self.__TransformCoords(x, y)]
-
-    def setFrame(self, pX, pY):
-        # TODO, there is code from the tictactoe bellow
-        localFrame = self.field[self.__TransformCoords(pX, pY)]
-        if localFrame == Consts.BOA_EMPTY_REPR:
-            self.field[self.__TransformCoords(pX, pY)] = self.turn
-            if self.checkWinnance(pX, pY):
-                winner = 'VOID LOL'
-                if self.turn == Consts.BOA_P1_REPR:
-                    winner = 'P1 - CROSS'
-                elif self.turn == Consts.BOA_P2_REPR:
-                    winner = 'P2 - CIRCLE'
-                raise Exception('ALLER CHAMPION (%s) A GAGNER' % winner)
-            self.fireNextTurn()
-
     def checkLoosance(self):
         # check loose condition, if lost return true
         return False
+
+    def getFrame(self, x, y):
+        return self.field[self.__TransformCoords(x, y)]
+
+    def setFrame(self, x, y, value):
+        self.field[self.__TransformCoods(x, y)] = value
 
     def __TransformCoords(self, x, y):
         return (y * self.width) + x
