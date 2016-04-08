@@ -1,0 +1,33 @@
+#!/usr/bin/python
+
+from __future__ import print_function
+
+import sys
+import consts as Consts
+from Board import Board
+import tk_draw
+
+
+def main(args):
+    ''' Initialize game '''
+    if Consts.DEBUG and Consts.DEBUG_BACK:
+        print('creating Board ...')
+    board = Board()
+    if Consts.DEBUG and Consts.DEBUG_BACK:
+        print('... board created')
+        print('initial field : ')
+        print(board.field)
+    instance = tk_draw.getInstance()
+    window = tk_draw.getWindow(instance, board)
+    tk_draw.drawBoard(window, board)
+    tk_draw.attachUpdater(instance, window, board)
+    tk_draw.attachMainloop(instance)
+    if Consts.DEBUG and Consts.DEBUG_BACK:
+        print('out')
+
+if __name__ == '__main__':
+    ''' Entry point '''
+    if len(sys.argv) in (1, 2):
+        main(sys.argv[1:])
+    else:
+        print(Consts.USAGE)
