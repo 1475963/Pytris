@@ -2,7 +2,6 @@
 
 from tkinter import *
 import sys
-import board_properties as Config
 import consts as Consts
 
 
@@ -16,27 +15,28 @@ def clickHandler(event, pBoard):
         print('click at x : (%d), y : (%d)' % (event.x, event.y))
 
 
-def keyboardHandler(event, board):
+def keyPressHandler(event, board):
     if Consts.DEBUG and Consts.DEBUG_FRONT:
         print('keystroke pressed : ', event.keycode)
     if event.keycode in Consts.TK_KEY_EXIT:
-        print('You decided to quit, pussy') # Need an upgrade lol, should have a dict a lambda functions
+        print('You decided to quit, pussy') # Need an upgrade, should have a dict of lambda functions
         sys.exit()
     elif event.keycode in Consts.TK_KEY_LEFT:
         # Left
-        board.moveCurrent(False)
+        board.moveCurrent(-1)
     elif event.keycode in Consts.TK_KEY_RIGHT:
         # Right
-        board.moveCurrent(True)
+        board.moveCurrent(1)
     elif event.keycode in Consts.TK_KEY_ROT_CW90:
         # Rotation clockwise 90
-        board.rotateCurrent(True)
-    elif event.keycode in Consts.TK_KEY_ROT_NCW90:
-        # Rotation not clockwise 90
-        board.rotateCurrent(False)
+        board.rotateCurrent()
     elif event.keycode in Consts.TK_KEY_ACCELERATE:
-        # Accelerate
         board.accelerate()
+
+
+def keyReleaseHandler(event, board):
+    if event.keycode in Consts.TK_KEY_ACCELERATE:
+        board.decelerate()
 
 
 def updateHandler(pInstance, pWindow, pBoard):
@@ -51,9 +51,11 @@ def updateHandler(pInstance, pWindow, pBoard):
 
 def getWindow(pInstance, pBoard):
     ''' Returns a canvas object to draw on '''
-    canvas = Canvas(pInstance, width=Config.WIDTH, height=Config.HEIGHT)
-    canvas.bind('<Key>',
-                lambda event, board=pBoard: keyboardHandler(event, board))
+    canvas = Canvas(pInstance, width=Consts.TK_WIN_WIDTH, height=Consts.TK_WIN_HEIGHT)
+    canvas.bind('<KeyPress>',
+                lambda event, board=pBoard: keyPressHandler(event, board))
+    canvas.bind('<KeyRelease>',
+                lambda event, board=pBoard: keyReleaseHandler(event, board))
     canvas.bind('<ButtonPress-1>',
                 lambda event, board=pBoard: clickHandler(event, board))
     canvas.focus_set()
@@ -76,8 +78,9 @@ def scaleBoardToGraphic(pPoint):
         for i in range(2):
             if not (isinstance(pPoint[i], int) or isinstance(pPoint[i], float)):
                 raise Exception('bad point format')
-        return ((pPoint[0] * (Config.WIDTH / Consts.BOA_WIDTH)),
-                (pPoint[1] * (Config.HEIGHT / Consts.BOA_HEIGHT)))
+        return ((pPoint[0] * (Consts.TK_WIN_WIDTH / Consts.BOA_WIDTH)),
+                (pPoint[1] * (Consts.TK_WIN_HEIGHT / Consts.BOA_HEIGHT)))
+
 
 def drawSquare(window, x, y, color):
     sPoint = scaleBoardToGraphic((x, y))
@@ -91,11 +94,12 @@ def drawSquare(window, x, y, color):
                             ePoint[0], ePoint[1],
                             fill=color)
 
+
 def drawBoard(window, board):
     '''Draws the board in the canvas on the window'''
 
     window.create_rectangle(0, 0,
-                            Config.WIDTH, Config.HEIGHT,
+                            Consts.TK_WIN_WIDTH, Consts.TK_WIN_HEIGHT,
                             fill=Consts.TK_BG_COLOR)
 
     for y in range(board.height):

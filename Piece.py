@@ -7,9 +7,10 @@ from random import sample
 
 class Piece(object):
 
-    def __init__(self, pieceRepr, pieceType):
+    def __init__(self, pieceRepr, pieceType, piecePos):
         self.repr = pieceRepr
         self.type = pieceType
+        self.position = [int(piecePos[0]), int(piecePos[1])]
 
     def __del__(self):
         pass
@@ -21,7 +22,7 @@ class Piece(object):
             piece.append([int(point[0] + pos[0]), int(point[1] + pos[1])])
         if Consts.DEBUG and Consts.DEBUG_BACK:
             print("piece: ", piece)
-        return Piece(piece, virtualPiece)
+        return Piece(piece, virtualPiece, pos)
 
     @staticmethod
     def nextPiece(pos):
